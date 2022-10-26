@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
+  Dimensions,
   Easing,
   Pressable,
   TouchableOpacity,
@@ -21,18 +22,52 @@ const Box = styled.View`
 `;
 const AnimatedBox = Animated.createAnimatedComponent(Box);
 
-export default function App() {
-  const [up, setUp] = useState(false);
-  const POSITION = useRef(new Animated.ValueXY({ x: 0, y: 300 })).current;
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-  const toggleUp = () => setUp((prev) => !prev);
+///
+export default function App() {
+  const POSITION = useRef(
+    new Animated.ValueXY({
+      x: -SCREEN_WIDTH / 2 + 100,
+      y: -SCREEN_HEIGHT / 2 + 100,
+    })
+  ).current;
+  const topLeft = Animated.timing(POSITION, {
+    toValue: {
+      x: -SCREEN_WIDTH / 2 + 100,
+      y: -SCREEN_HEIGHT / 2 + 100,
+    },
+    useNativeDriver: false,
+  });
+
+  const bottomLeft = Animated.timing(POSITION, {
+    toValue: {
+      x: -SCREEN_WIDTH / 2 + 100,
+      y: SCREEN_HEIGHT / 2 - 100,
+    },
+    useNativeDriver: false,
+  });
+
+  const bottomRight = Animated.timing(POSITION, {
+    toValue: {
+      x: SCREEN_WIDTH / 2 - 100,
+      y: SCREEN_HEIGHT / 2 - 100,
+    },
+    useNativeDriver: false,
+  });
+
+  const topRight = Animated.timing(POSITION, {
+    toValue: {
+      x: SCREEN_WIDTH / 2 - 100,
+      y: -SCREEN_HEIGHT / 2 + 100,
+    },
+    useNativeDriver: false,
+  });
 
   const moveUp = () => {
-    Animated.timing(POSITION, {
-      toValue: up ? 300 : -300,
-      useNativeDriver: false,
-      duration: 3000,
-    }).start(toggleUp);
+    Animated.loop(
+      Animated.sequence([bottomLeft, bottomRight, topRight, topLeft])
+    ).start();
   };
 
   const rotation = POSITION.y.interpolate({
@@ -58,7 +93,10 @@ export default function App() {
         <AnimatedBox
           style={{
             borderRadius,
-            transform: [{ translateY: POSITION.y }, { rotateY: rotation }],
+            transform: [
+              ...POSITION.getTranslateTransform(),
+              // { rotateY: rotation },
+            ],
             backgroundColor: bgColor,
           }}
         />
