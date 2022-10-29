@@ -38,13 +38,23 @@ export default function App() {
 
   const panResponder = useRef(
     PanResponder.create({
+      // should become active when there is a touch
       onStartShouldSetPanResponder: () => true,
       onPanResponderMove: (_, { dx, dy }) => {
-        // console.log(gestureState);
         POSITION.setValue({
           x: dx,
           y: dy,
         });
+      },
+      onPanResponderRelease: () => {
+        // POSITION.setValue({ x: 0, y: 0 });
+        Animated.spring(POSITION, {
+          toValue: {
+            x: 0,
+            y: 0,
+          },
+          useNativeDriver: false,
+        }).start();
       },
     })
   ).current;
@@ -55,7 +65,7 @@ export default function App() {
         {...panResponder.panHandlers}
         style={{
           borderRadius,
-          transform: [...POSITION.getTranslateTransform()],
+          transform: POSITION.getTranslateTransform(),
           backgroundColor: bgColor,
         }}
       />
