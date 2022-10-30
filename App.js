@@ -1,78 +1,64 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, PanResponder } from "react-native";
+import { Animated, PanResponder, View } from "react-native";
 import styled from "styled-components/native";
+import { Ionicons } from "@expo/vector-icons";
 
 const Container = styled.View`
   flex: 1;
   justify-content: center;
   align-items: center;
+  background-color: #00a8ff;
 `;
 
-const Box = styled.View`
-  background-color: tomato;
-  width: 200px;
-  height: 200px;
+const Card = styled(Animated.createAnimatedComponent(View))`
+  background-color: white;
+  width: 300px;
+  height: 300px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3);
 `;
-const AnimatedBox = Animated.createAnimatedComponent(Box);
 
-///
 export default function App() {
-  const POSITION = useRef(
-    new Animated.ValueXY({
-      x: 0,
-      y: 0,
-    })
-  ).current;
-
-  const borderRadius = POSITION.y.interpolate({
-    inputRange: [-300, 300],
-    outputRange: [100, 0],
-  });
-
-  const bgColor = POSITION.y.interpolate({
-    inputRange: [-300, 300],
-    outputRange: ["rgb(255, 99, 71)", "rgb(71, 166 , 255)"],
-  });
-
-  // Y_POSITION.addListener(() => console.log(opacity));
-
   const panResponder = useRef(
     PanResponder.create({
-      // should become active when there is a touch
       onStartShouldSetPanResponder: () => true,
-      // touch started (start from previous value)
-      onPanResponderGrant: () => {
-        POSITION.setOffset({
-          x: POSITION.x._value,
-          y: POSITION.y._value,
-        });
+      onPanResponderGrant: () => onPressIn(),
+      onPanResponderMove: (_, { dx }) => {
+        position.setValue(dx);
       },
-      // finger moving
-      onPanResponderMove: (_, { dx, dy }) => {
-        POSITION.setValue({
-          x: dx,
-          y: dy,
-        });
-      },
-      // touch finished
       onPanResponderRelease: () => {
-        // take the offset and turn it to zero
-        // and put that offset and give it to Position
-        POSITION.flattenOffset();
+        Animated.parallel([
+          onPressOut,
+          Animated.spring(position, {
+            toValue: 0,
+            useNativeDriver: true,
+          }),
+        ]).start();
       },
     })
   ).current;
+
+  const scale = useRef(new Animated.Value(1)).current;
+  const position = useRef(new Animated.Value(0)).current;
+  const onPressIn = () =>
+    Animated.spring(scale, { toValue: 0.95, useNativeDriver: true }).start();
+  const onPressOut = Animated.spring(scale, {
+    toValue: 1,
+    useNativeDriver: true,
+  });
 
   return (
     <Container>
-      <AnimatedBox
+      <Card
         {...panResponder.panHandlers}
         style={{
-          borderRadius,
-          transform: POSITION.getTranslateTransform(),
-          backgroundColor: bgColor,
+          transform: [{ scale }, { translateX: position }],
         }}
-      />
+      >
+        <Ionicons name="pizza" color="#192a56" size={98} />
+      </Card>
     </Container>
   );
 }
