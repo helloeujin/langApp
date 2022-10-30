@@ -40,21 +40,25 @@ export default function App() {
     PanResponder.create({
       // should become active when there is a touch
       onStartShouldSetPanResponder: () => true,
+      // touch started (start from previous value)
+      onPanResponderGrant: () => {
+        POSITION.setOffset({
+          x: POSITION.x._value,
+          y: POSITION.y._value,
+        });
+      },
+      // finger moving
       onPanResponderMove: (_, { dx, dy }) => {
         POSITION.setValue({
           x: dx,
           y: dy,
         });
       },
+      // touch finished
       onPanResponderRelease: () => {
-        // POSITION.setValue({ x: 0, y: 0 });
-        Animated.spring(POSITION, {
-          toValue: {
-            x: 0,
-            y: 0,
-          },
-          useNativeDriver: false,
-        }).start();
+        // take the offset and turn it to zero
+        // and put that offset and give it to Position
+        POSITION.flattenOffset();
       },
     })
   ).current;
